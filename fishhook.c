@@ -35,6 +35,10 @@
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
+// Zhuowei: arm64e
+#ifdef __arm64e__
+#include <ptrauth.h>
+#endif
 
 #ifdef __LP64__
 typedef struct mach_header_64 mach_header_t;
@@ -130,11 +134,19 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
       for (uint j = 0; j < cur->rebindings_nel; j++) {
         if (symbol_name_longer_than_1 &&
             strcmp(&symbol_name[1], cur->rebindings[j].name) == 0) {
+          // TODO(zhuowei): fix this
           if (cur->rebindings[j].replaced != NULL &&
               indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
             *(cur->rebindings[j].replaced) = indirect_symbol_bindings[i];
           }
+// Zhuowei: arm64e
+#ifdef __arm64e__
+          indirect_symbol_bindings[i] = ptrauth_auth_and_resign(cur->rebindings[j].replacement,
+                                                                ptrauth_key_function_pointer, 0,
+                                                                ptrauth_key_function_pointer, &indirect_symbol_bindings[i]);
+#else
           indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+#endif
           goto symbol_loop;
         }
       }
