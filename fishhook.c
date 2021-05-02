@@ -137,7 +137,14 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
           // TODO(zhuowei): fix this
           if (cur->rebindings[j].replaced != NULL &&
               indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
+// Zhuowei: arm64e
+#ifdef __arm64e__
+            *(cur->rebindings[j].replaced) = ptrauth_auth_and_resign(indirect_symbol_bindings[i],
+                                                                     ptrauth_key_function_pointer, &indirect_symbol_bindings[i],
+                                                                     ptrauth_key_function_pointer, 0);
+#else
             *(cur->rebindings[j].replaced) = indirect_symbol_bindings[i];
+#endif
           }
 // Zhuowei: arm64e
 #ifdef __arm64e__
